@@ -46,7 +46,6 @@ while True:
         socket.send_string("ok:")
     elif prot == "wait-msg":
         if got_msg:
-            print(msg)
             socket.send_string(msg)
         else:
             socket.send_string("wait:")

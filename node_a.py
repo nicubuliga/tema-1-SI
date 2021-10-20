@@ -2,7 +2,7 @@ import zmq
 from Crypto.Cipher import AES
 
 k_prim = b"abcdefghqazwsxed"
-iv = b"abababcdcdcdzzzz"
+iv = b"abababcdcdcdzzzzxbabubcdchcdzfzz"
 
 context = zmq.Context()
 
@@ -50,11 +50,10 @@ def encrypt_text(plaintext, mode, key):
             ciphertext += cipher.encrypt(block.encode())
     elif mode == "OFB":
         for block in blocks:
-            encrypted_iv = cipher.encrypt(iv)
-            ciphertext += xor(encrypt_text, block)
             global iv
-            iv = iv[len(iv)//2:-1] + encrypted_iv[0:len(encrypted_iv)//2]
-    print(ciphertext)
+            encrypted_iv = cipher.encrypt(iv)
+            ciphertext += xor(encrypted_iv[:len(encrypted_iv)//2], block.encode())
+            iv = iv[len(iv)//2:] + encrypted_iv[:len(encrypted_iv)//2]
     return ciphertext
 
 

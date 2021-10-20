@@ -2,7 +2,7 @@ import zmq
 from Crypto.Cipher import AES
 
 k_prim = b"abcdefghqazwsxed"
-iv = b"abababcdcdcdzzzz"
+iv = b"abababcdcdcdzzzzxbabubcdchcdzfzz"
 
 context = zmq.Context()
 
@@ -34,6 +34,9 @@ def wait_message():
         if resp != "wait:":
             return resp
 
+def xor(x ,y):
+    return bytes(a ^ b for (a, b) in zip(x, y))
+
 def decrypt_text(ciphertext, mode, key):
     plaintext = b""
     cipher = AES.new(key, AES.MODE_ECB)
@@ -42,6 +45,12 @@ def decrypt_text(ciphertext, mode, key):
     if mode == "ECB":
         for block in blocks:
             plaintext += cipher.decrypt(block)
+    elif mode == "OFB":
+        for block in blocks:
+            global iv
+            encrypted_iv = cipher.encrypt(iv)
+            plaintext += xor(encrypted_iv[:len(encrypted_iv)//2], block)
+            iv = iv[len(iv)//2:] + encrypted_iv[:len(encrypted_iv)//2]
     
     return plaintext
 
@@ -50,4 +59,6 @@ mode, key = request_mode_and_key()
 start_communication()
 ciphertext = wait_message()
 plaintext = decrypt_text(eval(ciphertext), mode, key)
-print(plaintext.decode())
+
+with open("received.txt", "w") as fd:
+    fd.write(plaintext.decode().strip())
